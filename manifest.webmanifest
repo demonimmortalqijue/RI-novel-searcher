@@ -1,11 +1,14 @@
 {
   "name": "RI Passage Finder",
   "short_name": "RI Searcher",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#111111",
   "theme_color": "#171717",
   "description": "Offline EPUB passage search tool",
-  "icons": []
+  "icons": [
+    {"src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
+  ]
 }
