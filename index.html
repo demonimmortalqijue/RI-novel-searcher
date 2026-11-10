@@ -47,7 +47,10 @@ details{margin-top:12px}summary{cursor:pointer;color:var(--accent)}.topline{disp
     <label for="query">2. Search the novel</label>
     <input id="query" type="search" placeholder="Paste a line, quote, or a few keywords…" autocomplete="off">
     <div class="search-controls">
-      <div><label for="volume">Search scope</label><select id="volume"><option value="all">Entire novel</option></select><p class="small">Sections follow this EPUB’s own table of contents, not necessarily RI’s six canonical story volumes.</p></div>
+      <div><label for="volume">EPUB section filter</label><select id="volume"><option value="all">All sections</option></select><p class="small">Optional filter based on this EPUB’s table of contents.</p></div>
+      <div><label for="chapterScope">Chapter range</label><select id="chapterScope"><option value="all">Entire novel</option><option value="after">From a chapter onward</option><option value="between">Between two chapters</option></select></div>
+      <div id="rangeStartWrap" hidden><label for="rangeStart">Starting chapter</label><input id="rangeStart" type="number" min="1" step="1" inputmode="numeric" placeholder="e.g. 1000" style="width:100%;padding:10px;border:1px solid #555;border-radius:8px;background:#111;color:var(--text)"></div>
+      <div id="rangeEndWrap" hidden><label for="rangeEnd">Ending chapter</label><input id="rangeEnd" type="number" min="1" step="1" inputmode="numeric" placeholder="e.g. 1500" style="width:100%;padding:10px;border:1px solid #555;border-radius:8px;background:#111;color:var(--text)"></div>
       <div><label for="mode">Search mode</label><select id="mode"><option value="exact">Exact phrase + smart fallback</option><option value="all">All keywords</option><option value="fuzzy">Fuzzy quote (handles typos)</option></select></div>
       <div><label for="limit">Maximum results</label><select id="limit"><option>10</option><option>25</option><option>50</option><option>100</option></select></div>
       <div class="search-action"><button id="search" disabled>Search</button></div>
@@ -191,9 +194,17 @@ async function search(){
  try{
   const mode=$('mode').value,limit=Number($('limit').value),matches=[],nq=norm(q);
   const selectedVolume=$('volume').value;
-  const searchChapters=selectedVolume==='all'?chapters:chapters.filter(ch=>String(ch.volume)===selectedVolume);
-  if(!searchChapters.length){$('searchStatus').textContent='No chapters are mapped to that section. Re-import the EPUB to rebuild the section index.';return}
-  $('searchStatus').textContent=`Searching ${searchChapters.length.toLocaleString()} chapters${selectedVolume==='all'?'':` in EPUB section ${selectedVolume}`}…`;
+  const chapterScope=$('chapterScope').value;
+  const startValue=Number.parseInt($('rangeStart').value,10);
+  const endValue=Number.parseInt($('rangeEnd').value,10);
+  if(chapterScope!=='all'&&(!Number.isInteger(startValue)||startValue<1)){$('searchStatus').textContent='Enter a valid starting chapter number.';$('rangeStart').focus();return}
+  if(chapterScope==='between'&&(!Number.isInteger(endValue)||endValue<1||endValue<startValue)){$('searchStatus').textContent='Enter an ending chapter that is equal to or greater than the starting chapter.';$('rangeEnd').focus();return}
+  let searchChapters=selectedVolume==='all'?chapters:chapters.filter(ch=>String(ch.volume)===selectedVolume);
+  if(chapterScope==='after')searchChapters=searchChapters.filter(ch=>ch.num>=startValue);
+  if(chapterScope==='between')searchChapters=searchChapters.filter(ch=>ch.num>=startValue&&ch.num<=endValue);
+  if(!searchChapters.length){$('searchStatus').textContent='No chapters fall within that section and chapter range. Check the numbers or widen the search.';return}
+  const rangeLabel=chapterScope==='after'?` from chapter ${startValue} onward`:chapterScope==='between'?` from chapter ${startValue} to ${endValue}`:'';
+  $('searchStatus').textContent=`Searching ${searchChapters.length.toLocaleString()} chapters${selectedVolume==='all'?'':` in EPUB section ${selectedVolume}`}${rangeLabel}…`;
   if(mode==='exact'){
    let checked=0;
    for(const ch of searchChapters){if(norm(ch.title).includes(nq))matches.push({ch,para:ch.title,kind:'Exact match in chapter title',score:2});else for(const p of ch.paras){if(norm(p).includes(nq)){matches.push({ch,para:p,kind:'Exact phrase',score:2});break}}
@@ -220,6 +231,11 @@ async function search(){
 $('load').addEventListener('click',async()=>{const file=$('epub').files[0];if(!file){setStatus('Choose the EPUB file first.');return}
  $('load').disabled=true;$('search').disabled=true;
  try{await importEpub(file)}catch(e){setStatus('Import failed: '+(e.message||e));console.error(e)}finally{$('load').disabled=false}
+});
+$('chapterScope').addEventListener('change',()=>{
+ const mode=$('chapterScope').value;
+ $('rangeStartWrap').hidden=mode==='all';
+ $('rangeEndWrap').hidden=mode!=='between';
 });
 $('search').addEventListener('click',search);
 $('query').addEventListener('keydown',e=>{if(e.key==='Enter')search()});

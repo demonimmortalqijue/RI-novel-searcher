@@ -1,7 +1,19 @@
-RI SEARCHER PWA UPDATE
+RI SEARCHER PWA
 
-This package includes the web app and install icons. Upload the CONTENTS of this folder to the ROOT of your existing public GitHub repository (not the enclosing folder). Choose to replace existing index.html, manifest.webmanifest and sw.js, and add icon-192.png and icon-512.png.
+Upload the contents of this folder to the ROOT of your existing GitHub Pages repository, replacing the previous versions. Keep all five files together:
+- index.html
+- manifest.webmanifest
+- sw.js
+- icon-192.png
+- icon-512.png
 
-Then wait for GitHub Pages to deploy. Open the site in Chrome, refresh it, and check the three-dot menu for Install app or Add to Home screen. If Chrome still says it cannot install, clear the site's cached data/service worker or try again after a few minutes.
+NEW: Chapter range search
+- Entire novel
+- From a chosen chapter onward (for example, chapter 1000 to the end)
+- Between two chapter numbers (for example, chapters 1000-1500)
 
-Your EPUB is not included. Import it into the installed app.
+The existing EPUB section filter remains available and can be combined with a chapter range.
+
+After committing, wait for the GitHub Pages deployment to finish. Reopen the site in Chrome. If the installed app still shows the old version, close it fully, reopen it while online, and refresh/update the page so the new service worker cache is installed.
+
+Your EPUB and index stay on your device in browser storage. The EPUB is not uploaded to GitHub. Because the installed PWA uses a different website origin from a local HTML file, import the EPUB into the PWA once.
